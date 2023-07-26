@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -27,8 +27,26 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# django-allauth settings
+ACCOUNT_SESSION_REMEMBER = True
+ACCOUNT_AUTHENTICATION_METHOD = "username_email"
+ACCOUNT_EMAIL_REQUIRED = True  # new users need to specify email
+ACCOUNT_EMAIL_VERIFICATION = "optional"  # 'mandatory' 'none'
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+ACCOUNT_USERNAME_MIN_LENGTH = "4"
+ACCOUNT_ADAPTER = "users.adapter.MyAccountAdapter"
+ACCOUNT_SIGNUP_FORM_CLASS = "users.forms.SignupForm"
+ACCOUNT_USERNAME_VALIDATORS = "users.validators.custom_username_validators"
+ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False
+ACCOUNT_USERNAME_REQUIRED = True
+ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
+ACCOUNT_LOGIN_ATTEMPTS_LIMIT = 20
+ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 5
 
 # Application definition
+
+
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -40,7 +58,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'users'
+    'rest_framework.authtoken',
+    'users',
+    'files'
 ]
 
 MIDDLEWARE = [
@@ -53,12 +73,25 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+    ),
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 50,
+    "DEFAULT_PARSER_CLASSES": [
+        "rest_framework.parsers.JSONParser",
+    ],
+}
+
 ROOT_URLCONF = 'core.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ["templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -119,8 +152,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
+TEMP_DIRECTORY = "/tmp"  # Don't use a temp directory inside BASE_DIR!!!
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATIC_URL = "/static/"  # where js/css files are stored on the filesystem
 STATIC_URL = 'static/'
-
+MEDIA_URL = "/media/"  # URL where static files are served from the server
+STATIC_ROOT = BASE_DIR + "/static/"
+# where uploaded + encoded media are stored
+MEDIA_ROOT = BASE_DIR + "/media_files/"
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
