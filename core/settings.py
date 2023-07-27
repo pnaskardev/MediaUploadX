@@ -9,34 +9,213 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+import os
 from pathlib import Path
-
+from celery.schedules import crontab
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+# BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-&a-o0tunx*hoe5h3_@7yu6tfjr&!k*74kj$0979e3+qf2=tl!k'
+SECRET_KEY = 'django-insecure-_-v+=g@e_e8kra+nd*2^nwt!$9ekd%o(hphy$cwr-^o!(7gjk!'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# email settings
+DEFAULT_FROM_EMAIL = "info@mediauploadx.io"
+EMAIL_HOST_PASSWORD = "xyz"
+EMAIL_HOST_USER = "info@mediauploadx.io"
+EMAIL_USE_TLS = True
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+EMAIL_HOST = "mediacms.io"
+EMAIL_PORT = 587
+ADMIN_EMAIL_LIST = ["info@mediauploadx.io"]
+
+# These are passed on every request
+# if set to False will not fetch external content
+# this is only for the static files, as fonts/css/js files loaded from CDNs
+# not for user uploaded media!
+LOAD_FROM_CDN = False
+LOGIN_ALLOWED = True  # whether the login button appears
+REGISTER_ALLOWED = True  # whether the register button appears
+UPLOAD_MEDIA_ALLOWED = True  # whether the upload media button appears
+CAN_LIKE_MEDIA = True  # whether the like media appears
+CAN_DISLIKE_MEDIA = True  # whether the dislike media appears
+CAN_REPORT_MEDIA = True  # whether the report media appears
+CAN_SHARE_MEDIA = True  # whether the share media appears
+# how many times an item need be reported
+# to get to private state automatically
+REPORTED_TIMES_THRESHOLD = 10
+ALLOW_ANONYMOUS_ACTIONS = ["report", "like",
+                           "dislike", "watch"]  # need be a list
+
+FRONTEND_HOST = "http://localhost"
+# this variable - along with SSL_FRONTEND_HOST is used on several places
+# as email where a URL need appear etc
+
+# FRONTEND_HOST needs an http prefix - at the end of the file
+# there's a conversion to https with the SSL_FRONTEND_HOST env
+INTERNAL_IPS = "127.0.0.1"
+
+# experimental functionality for user ratings - does not work
+ALLOW_RATINGS = False
+ALLOW_RATINGS_CONFIRMED_EMAIL_ONLY = True
+
+ALLOWED_HOSTS = ["*", "mediacms.io", "127.0.0.1", "localhost"]
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# django-allauth settings
+ACCOUNT_SESSION_REMEMBER = True
+ACCOUNT_AUTHENTICATION_METHOD = "username_email"
+ACCOUNT_EMAIL_REQUIRED = True  # new users need to specify email
+ACCOUNT_EMAIL_VERIFICATION = "optional"  # 'mandatory' 'none'
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+ACCOUNT_USERNAME_MIN_LENGTH = "4"
+ACCOUNT_ADAPTER = "users.adapter.MyAccountAdapter"
+ACCOUNT_SIGNUP_FORM_CLASS = "users.forms.SignupForm"
+ACCOUNT_USERNAME_VALIDATORS = "users.validators.custom_username_validators"
+ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False
+ACCOUNT_USERNAME_REQUIRED = True
+ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
+ACCOUNT_LOGIN_ATTEMPTS_LIMIT = 20
+ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 5
+# registration won't be open, might also consider to remove links for register
+USERS_CAN_SELF_REGISTER = True
+RESTRICTED_DOMAINS_FOR_USER_REGISTRATION = [
+    "xxx.com", "emaildomainwhatever.com"]
+
+TEMP_DIRECTORY = "/tmp"  # Don't use a temp directory inside BASE_DIR!!!
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATIC_URL = "static/"  # where js/css files are stored on the filesystem
+MEDIA_URL = "/media/"  # URL where static files are served from the server
+# STATIC_ROOT = BASE_DIR + "/static/"
+# where uploaded + encoded media are stored
+MEDIA_ROOT = BASE_DIR + "/media_files/"
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
+
+MEDIA_UPLOAD_DIR = "original/"
+MEDIA_ENCODING_DIR = "encoded/"
+THUMBNAIL_UPLOAD_DIR = f"{MEDIA_UPLOAD_DIR}/thumbnails/"
+SUBTITLES_UPLOAD_DIR = f"{MEDIA_UPLOAD_DIR}/subtitles/"
+HLS_DIR = os.path.join(MEDIA_ROOT, "hls/")
+
+FFMPEG_COMMAND = "ffmpeg"  # this is the path
+FFPROBE_COMMAND = "ffprobe"  # this is the path
+MP4HLS = "mp4hls"
+
+MASK_IPS_FOR_ACTIONS = True
+# how many seconds a process in running state without reporting progress is
+# considered as stale...unfortunately v9 seems to not include time
+# some times so raising this high
+RUNNING_STATE_STALE = 60 * 60 * 2
+
+FRIENDLY_TOKEN_LEN = 9
+
+# for videos, after that duration get split into chunks
+# and encoded independently
+CHUNKIZE_VIDEO_DURATION = 60 * 5
+# aparently this has to be smaller than VIDEO_CHUNKIZE_DURATION
+VIDEO_CHUNKS_DURATION = 60 * 4
+
+# always get these two, even if upscaling
+MINIMUM_RESOLUTIONS_TO_ENCODE = [240, 360]
+
+USERS_NOTIFICATIONS = {
+    "MEDIA_ADDED": True,  # in use
+    "MEDIA_ENCODED": False,  # not implemented
+    "MEDIA_REPORTED": True,  # in use
+}
+
+ADMINS_NOTIFICATIONS = {
+    "NEW_USER": True,  # in use
+    "MEDIA_ADDED": True,  # in use
+    "MEDIA_ENCODED": False,  # not implemented
+    "MEDIA_REPORTED": True,  # in use
+}
 
 
-# Application definition
+# this is for fineuploader - media uploads
+UPLOAD_DIR = "uploads/"
+CHUNKS_DIR = "chunks/"
+
+# number of files to upload using fineuploader at once
+UPLOAD_MAX_FILES_NUMBER = 100
+CONCURRENT_UPLOADS = True
+CHUNKS_DONE_PARAM_NAME = "done"
+FILE_STORAGE = "django.core.files.storage.DefaultStorage"
+
+X_FRAME_OPTIONS = "ALLOWALL"
+EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"
+CELERY_EMAIL_TASK_CONFIG = {
+    "queue": "short_tasks",
+}
+
+
+CKEDITOR_CONFIGS = {
+    "default": {
+        "toolbar": "Custom",
+        "width": "100%",
+        "toolbar_Custom": [
+            ["Styles"],
+            ["Format"],
+            ["Bold", "Italic", "Underline"],
+            ["HorizontalRule"],
+            [
+                "NumberedList",
+                "BulletedList",
+                "-",
+                "Outdent",
+                "Indent",
+                "-",
+                "JustifyLeft",
+                "JustifyCenter",
+                "JustifyRight",
+                "JustifyBlock",
+            ],
+            ["Link", "Unlink"],
+            ["Image"],
+            ["RemoveFormat", "Source"],
+        ],
+    }
+}
+
+AUTH_USER_MODEL = 'users.User'
+
+LOGIN_REDIRECT_URL = "/"
+
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework.authtoken',
+    "imagekit",
+    "mptt",
+    "crispy_forms",
+    'users',
+    'files',
+    "djcelery_email",
+    "ckeditor",
+    "drf_yasg",
 ]
 
 MIDDLEWARE = [
@@ -49,12 +228,25 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+    ),
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 50,
+    "DEFAULT_PARSER_CLASSES": [
+        "rest_framework.parsers.JSONParser",
+    ],
+}
+
 ROOT_URLCONF = 'core.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ["templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -69,6 +261,37 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
+LOGS_DIR = os.path.join(BASE_DIR, "logs")
+
+error_filename = os.path.join(LOGS_DIR, "debug.log")
+if not os.path.exists(LOGS_DIR):
+    try:
+        os.mkdir(LOGS_DIR)
+    except PermissionError:
+        pass
+
+if not os.path.isfile(error_filename):
+    open(error_filename, 'a').close()
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": error_filename,
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["file"],
+            "level": "ERROR",
+            "propagate": True,
+        },
+    },
+}
+
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -76,7 +299,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
@@ -115,7 +338,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
