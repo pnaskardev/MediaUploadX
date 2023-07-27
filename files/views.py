@@ -2,6 +2,9 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 
+from . methods import is_mediauploadx_editor, is_mediauploadx_manager
+
+
 def index(request):
     """Index view"""
 
@@ -27,7 +30,7 @@ def add_subtitle(request):
     if not media:
         return HttpResponseRedirect("/")
 
-    if not (request.user == media.user or is_mediacms_editor(request.user) or is_mediacms_manager(request.user)):
+    if not (request.user == media.user or is_mediauploadx_editor(request.user) or is_mediauploadx_manager(request.user)):
         return HttpResponseRedirect("/")
 
     if request.method == "POST":
