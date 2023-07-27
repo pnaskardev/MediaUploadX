@@ -47,20 +47,33 @@ ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 5
 # Application definition
 
 
-
 AUTH_USER_MODEL = 'users.User'
+
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    "imagekit",
+    "mptt",
+    "crispy_forms",
     'users',
-    'files'
+    'files',
+    "djcelery_email",
+    "ckeditor",
+    "drf_yasg",
 ]
 
 MIDDLEWARE = [

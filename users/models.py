@@ -36,7 +36,7 @@ class User(AbstractUser):
     is_editor = models.BooleanField(
         "MediaCMS Editor", default=False, db_index=True)
     is_manager = models.BooleanField(
-        "MediaCMS Manager", default=False, db_index=True)
+        "MediaUploadX Manager", default=False, db_index=True)
     allow_contact = models.BooleanField(
         "Whether allow contact will be shown on profile page", default=False)
 
