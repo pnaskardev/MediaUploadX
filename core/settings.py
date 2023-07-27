@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
 from pathlib import Path
-
+from celery.schedules import crontab
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,7 +25,49 @@ SECRET_KEY = 'django-insecure-_-v+=g@e_e8kra+nd*2^nwt!$9ekd%o(hphy$cwr-^o!(7gjk!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# email settings
+DEFAULT_FROM_EMAIL = "info@mediauploadx.io"
+EMAIL_HOST_PASSWORD = "xyz"
+EMAIL_HOST_USER = "info@mediauploadx.io"
+EMAIL_USE_TLS = True
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+EMAIL_HOST = "mediacms.io"
+EMAIL_PORT = 587
+ADMIN_EMAIL_LIST = ["info@mediauploadx.io"]
+
+# These are passed on every request
+# if set to False will not fetch external content
+# this is only for the static files, as fonts/css/js files loaded from CDNs
+# not for user uploaded media!
+LOAD_FROM_CDN = False
+LOGIN_ALLOWED = True  # whether the login button appears
+REGISTER_ALLOWED = True  # whether the register button appears
+UPLOAD_MEDIA_ALLOWED = True  # whether the upload media button appears
+CAN_LIKE_MEDIA = True  # whether the like media appears
+CAN_DISLIKE_MEDIA = True  # whether the dislike media appears
+CAN_REPORT_MEDIA = True  # whether the report media appears
+CAN_SHARE_MEDIA = True  # whether the share media appears
+# how many times an item need be reported
+# to get to private state automatically
+REPORTED_TIMES_THRESHOLD = 10
+ALLOW_ANONYMOUS_ACTIONS = ["report", "like",
+                           "dislike", "watch"]  # need be a list
+
+FRONTEND_HOST = "http://localhost"
+# this variable - along with SSL_FRONTEND_HOST is used on several places
+# as email where a URL need appear etc
+
+# FRONTEND_HOST needs an http prefix - at the end of the file
+# there's a conversion to https with the SSL_FRONTEND_HOST env
+INTERNAL_IPS = "127.0.0.1"
+
+# experimental functionality for user ratings - does not work
+ALLOW_RATINGS = False
+ALLOW_RATINGS_CONFIRMED_EMAIL_ONLY = True
+
 ALLOWED_HOSTS = ["*", "mediacms.io", "127.0.0.1", "localhost"]
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # django-allauth settings
 ACCOUNT_SESSION_REMEMBER = True
@@ -45,9 +87,10 @@ ACCOUNT_LOGIN_ATTEMPTS_LIMIT = 20
 ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 5
 # registration won't be open, might also consider to remove links for register
 USERS_CAN_SELF_REGISTER = True
-RESTRICTED_DOMAINS_FOR_USER_REGISTRATION = ["xxx.com", "emaildomainwhatever.com"]
+RESTRICTED_DOMAINS_FOR_USER_REGISTRATION = [
+    "xxx.com", "emaildomainwhatever.com"]
 
-# TEMP_DIRECTORY = "/tmp"  # Don't use a temp directory inside BASE_DIR!!!
+TEMP_DIRECTORY = "/tmp"  # Don't use a temp directory inside BASE_DIR!!!
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATIC_URL = "static/"  # where js/css files are stored on the filesystem
 MEDIA_URL = "/media/"  # URL where static files are served from the server
