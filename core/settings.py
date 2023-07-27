@@ -13,7 +13,7 @@ import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+# BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-_-v+=g@e_e8kra+nd*2^nwt!$9ekd%o(hphy$cwr-^o!(7gjk!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*", "mediacms.io", "127.0.0.1", "localhost"]
 
 # django-allauth settings
 ACCOUNT_SESSION_REMEMBER = True
@@ -43,11 +43,110 @@ ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
 ACCOUNT_LOGIN_ATTEMPTS_LIMIT = 20
 ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 5
+# registration won't be open, might also consider to remove links for register
+USERS_CAN_SELF_REGISTER = True
+RESTRICTED_DOMAINS_FOR_USER_REGISTRATION = ["xxx.com", "emaildomainwhatever.com"]
 
-# Application definition
+# TEMP_DIRECTORY = "/tmp"  # Don't use a temp directory inside BASE_DIR!!!
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATIC_URL = "static/"  # where js/css files are stored on the filesystem
+MEDIA_URL = "/media/"  # URL where static files are served from the server
+# STATIC_ROOT = BASE_DIR + "/static/"
+# where uploaded + encoded media are stored
+MEDIA_ROOT = BASE_DIR + "/media_files/"
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
 
+MEDIA_UPLOAD_DIR = "original/"
+MEDIA_ENCODING_DIR = "encoded/"
+THUMBNAIL_UPLOAD_DIR = f"{MEDIA_UPLOAD_DIR}/thumbnails/"
+SUBTITLES_UPLOAD_DIR = f"{MEDIA_UPLOAD_DIR}/subtitles/"
+HLS_DIR = os.path.join(MEDIA_ROOT, "hls/")
+
+FFMPEG_COMMAND = "ffmpeg"  # this is the path
+FFPROBE_COMMAND = "ffprobe"  # this is the path
+MP4HLS = "mp4hls"
+
+MASK_IPS_FOR_ACTIONS = True
+# how many seconds a process in running state without reporting progress is
+# considered as stale...unfortunately v9 seems to not include time
+# some times so raising this high
+RUNNING_STATE_STALE = 60 * 60 * 2
+
+FRIENDLY_TOKEN_LEN = 9
+
+# for videos, after that duration get split into chunks
+# and encoded independently
+CHUNKIZE_VIDEO_DURATION = 60 * 5
+# aparently this has to be smaller than VIDEO_CHUNKIZE_DURATION
+VIDEO_CHUNKS_DURATION = 60 * 4
+
+# always get these two, even if upscaling
+MINIMUM_RESOLUTIONS_TO_ENCODE = [240, 360]
+
+USERS_NOTIFICATIONS = {
+    "MEDIA_ADDED": True,  # in use
+    "MEDIA_ENCODED": False,  # not implemented
+    "MEDIA_REPORTED": True,  # in use
+}
+
+ADMINS_NOTIFICATIONS = {
+    "NEW_USER": True,  # in use
+    "MEDIA_ADDED": True,  # in use
+    "MEDIA_ENCODED": False,  # not implemented
+    "MEDIA_REPORTED": True,  # in use
+}
+
+
+# this is for fineuploader - media uploads
+UPLOAD_DIR = "uploads/"
+CHUNKS_DIR = "chunks/"
+
+# number of files to upload using fineuploader at once
+UPLOAD_MAX_FILES_NUMBER = 100
+CONCURRENT_UPLOADS = True
+CHUNKS_DONE_PARAM_NAME = "done"
+FILE_STORAGE = "django.core.files.storage.DefaultStorage"
+
+X_FRAME_OPTIONS = "ALLOWALL"
+EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"
+CELERY_EMAIL_TASK_CONFIG = {
+    "queue": "short_tasks",
+}
+
+
+CKEDITOR_CONFIGS = {
+    "default": {
+        "toolbar": "Custom",
+        "width": "100%",
+        "toolbar_Custom": [
+            ["Styles"],
+            ["Format"],
+            ["Bold", "Italic", "Underline"],
+            ["HorizontalRule"],
+            [
+                "NumberedList",
+                "BulletedList",
+                "-",
+                "Outdent",
+                "Indent",
+                "-",
+                "JustifyLeft",
+                "JustifyCenter",
+                "JustifyRight",
+                "JustifyBlock",
+            ],
+            ["Link", "Unlink"],
+            ["Image"],
+            ["RemoveFormat", "Source"],
+        ],
+    }
+}
 
 AUTH_USER_MODEL = 'users.User'
+
+LOGIN_REDIRECT_URL = "/"
 
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
@@ -119,6 +218,37 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
+LOGS_DIR = os.path.join(BASE_DIR, "logs")
+
+error_filename = os.path.join(LOGS_DIR, "debug.log")
+if not os.path.exists(LOGS_DIR):
+    try:
+        os.mkdir(LOGS_DIR)
+    except PermissionError:
+        pass
+
+if not os.path.isfile(error_filename):
+    open(error_filename, 'a').close()
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": error_filename,
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["file"],
+            "level": "ERROR",
+            "propagate": True,
+        },
+    },
+}
+
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -126,7 +256,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
@@ -165,14 +295,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-TEMP_DIRECTORY = "/tmp"  # Don't use a temp directory inside BASE_DIR!!!
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-STATIC_URL = "/static/"  # where js/css files are stored on the filesystem
-STATIC_URL = 'static/'
-MEDIA_URL = "/media/"  # URL where static files are served from the server
-STATIC_ROOT = BASE_DIR + "/static/"
-# where uploaded + encoded media are stored
-MEDIA_ROOT = BASE_DIR + "/media_files/"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 

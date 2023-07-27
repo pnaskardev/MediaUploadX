@@ -47,7 +47,7 @@ def view_user_media(request, username):
     return render(request, "core/user_media.html", context)
 
 
-def view_user_playlist(request, username):
+def view_user_playlists(request, username):
     context = {}
     user = get_user(username=username)
     if not user:
@@ -64,7 +64,7 @@ def view_user_playlist(request, username):
     return render(request, "core/user_playlists.html", context)
 
 
-def view_user_playlist(request, username):
+def view_user_about(request, username):
     context = {}
     user = get_user(username=username)
     if not user:
