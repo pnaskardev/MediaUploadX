@@ -35,6 +35,40 @@ EMAIL_HOST = "mediacms.io"
 EMAIL_PORT = 587
 ADMIN_EMAIL_LIST = ["info@mediauploadx.io"]
 
+# valid choices here are 'public', 'private', 'unlisted
+PORTAL_WORKFLOW = "public"
+
+MEDIA_IS_REVIEWED = True # whether an admin needs to review a media file.
+# By default consider this is not needed.
+# If set to False, then each new media need be reviewed otherwise
+# it won't appear on public listings
+
+# if set to True the url for original file is returned to the API.
+SHOW_ORIGINAL_MEDIA = True
+# Keep in mind that nginx will serve the file unless there's
+# some authentication taking place. Check nginx file and setup a
+# basic http auth user/password if you want to restrict access
+
+MAX_MEDIA_PER_PLAYLIST = 70
+# bytes, size of uploaded media
+UPLOAD_MAX_SIZE = 800 * 1024 * 1000 * 5
+
+MAX_CHARS_FOR_COMMENT = 10000  # so that it doesn't end up huge
+TIMESTAMP_IN_TIMEBAR = False  # shows timestamped comments in the timebar for videos
+ALLOW_MENTION_IN_COMMENTS = False  # allowing to mention other users with @ in the comments
+
+# valid options: content, author
+RELATED_MEDIA_STRATEGY = "content"
+
+USE_I18N = True
+USE_L10N = True
+USE_TZ = True
+SITE_ID = 1
+
+# protection agains anonymous users
+# per ip address limit, for actions as like/dislike/report
+TIME_TO_ACTION_ANONYMOUS = 10 * 60
+
 # These are passed on every request
 # if set to False will not fetch external content
 # this is only for the static files, as fonts/css/js files loaded from CDNs
