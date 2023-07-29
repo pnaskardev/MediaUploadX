@@ -107,6 +107,10 @@ def get_default_state(user=None):
             state = "unlisted"
     return state
 
+
+def get_file_name(filename):
+    return filename.split("/")[-1]
+
 def get_file_type(filename):
     if not os.path.exists(filename):
         return None

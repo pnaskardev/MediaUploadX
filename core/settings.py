@@ -38,7 +38,7 @@ ADMIN_EMAIL_LIST = ["info@mediauploadx.io"]
 # valid choices here are 'public', 'private', 'unlisted
 PORTAL_WORKFLOW = "public"
 
-MEDIA_IS_REVIEWED = True # whether an admin needs to review a media file.
+MEDIA_IS_REVIEWED = True  # whether an admin needs to review a media file.
 # By default consider this is not needed.
 # If set to False, then each new media need be reviewed otherwise
 # it won't appear on public listings
@@ -55,7 +55,8 @@ UPLOAD_MAX_SIZE = 800 * 1024 * 1000 * 5
 
 MAX_CHARS_FOR_COMMENT = 10000  # so that it doesn't end up huge
 TIMESTAMP_IN_TIMEBAR = False  # shows timestamped comments in the timebar for videos
-ALLOW_MENTION_IN_COMMENTS = False  # allowing to mention other users with @ in the comments
+# allowing to mention other users with @ in the comments
+ALLOW_MENTION_IN_COMMENTS = False
 
 # valid options: content, author
 RELATED_MEDIA_STRATEGY = "content"
@@ -94,6 +95,16 @@ FRONTEND_HOST = "http://localhost"
 # FRONTEND_HOST needs an http prefix - at the end of the file
 # there's a conversion to https with the SSL_FRONTEND_HOST env
 INTERNAL_IPS = "127.0.0.1"
+
+# email settings
+DEFAULT_FROM_EMAIL = "info@mediauploadx.io"
+EMAIL_HOST_PASSWORD = "xyz"
+EMAIL_HOST_USER = "info@mediauploadx.io"
+EMAIL_USE_TLS = True
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+EMAIL_HOST = "mediacms.io"
+EMAIL_PORT = 587
+ADMIN_EMAIL_LIST = ["info@mediaupploadx.io"]
 
 # experimental functionality for user ratings - does not work
 ALLOW_RATINGS = False
@@ -247,6 +258,8 @@ INSTALLED_APPS = [
     "crispy_forms",
     'users',
     'files',
+    'actions',
+    'uploader',
     "djcelery_email",
     "ckeditor",
     "drf_yasg",
@@ -330,6 +343,8 @@ LOGGING = {
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+REDIS_LOCATION = "redis://127.0.0.1:6379/1"
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -367,6 +382,82 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
+
+# CELERY STUFF
+BROKER_URL = REDIS_LOCATION
+CELERY_RESULT_BACKEND = BROKER_URL
+CELERY_ACCEPT_CONTENT = ["application/json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_SOFT_TIME_LIMIT = 2 * 60 * 60
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERYD_PREFETCH_MULTIPLIER = 1
+
+CELERY_BEAT_SCHEDULE = {
+    # clear expired sessions, every sunday 1.01am. By default Django has 2week
+    # expire date
+    "clear_sessions": {
+        "task": "clear_sessions",
+        "schedule": crontab(hour=1, minute=1, day_of_week=6),
+    },
+    "get_list_of_popular_media": {
+        "task": "get_list_of_popular_media",
+        "schedule": crontab(minute=1, hour="*/10"),
+    },
+    "update_listings_thumbnails": {
+        "task": "update_listings_thumbnails",
+        "schedule": crontab(minute=2, hour="*/30"),
+    },
+}
+# TODO: beat, delete chunks from media root
+# chunks_dir after xx days...(also uploads_dir)
+
+
+LOCAL_INSTALL = False
+
+# this is an option to make the whole portal available to logged in users only
+# it is placed here so it can be overrided on local_settings.py
+GLOBAL_LOGIN_REQUIRED = False
+
+# TODO: separate settings on production/development more properly, for now
+# this should be ok
+CELERY_TASK_ALWAYS_EAGER = False
+if os.environ.get("TESTING"):
+    CELERY_TASK_ALWAYS_EAGER = True
+
+
+# try:
+#     # keep a local_settings.py file for local overrides
+#     from .local_settings import *  # noqa
+
+#     # ALLOWED_HOSTS needs a url/ip
+#     ALLOWED_HOSTS.append(FRONTEND_HOST.replace("http://", "").replace("https://", ""))
+# except ImportError:
+#     # local_settings not in use
+#     pass
+
+
+# if "http" not in FRONTEND_HOST:
+#     # FRONTEND_HOST needs a http:// preffix
+#     FRONTEND_HOST = f"http://{FRONTEND_HOST}"
+
+# if LOCAL_INSTALL:
+#     SSL_FRONTEND_HOST = FRONTEND_HOST.replace("http", "https")
+# else:
+#     SSL_FRONTEND_HOST = FRONTEND_HOST
+
+# if GLOBAL_LOGIN_REQUIRED:
+#     # this should go after the AuthenticationMiddleware middleware
+#     MIDDLEWARE.insert(5, "login_required.middleware.LoginRequiredMiddleware")
+#     LOGIN_REQUIRED_IGNORE_PATHS = [
+#         r'/accounts/login/$',
+#         r'/accounts/logout/$',
+#         r'/accounts/signup/$',
+#         r'/accounts/password/.*/$',
+#         r'/accounts/confirm-email/.*/$',
+#         r'/api/v[0-9]+/',
+#     ]
 
 
 # Static files (CSS, JavaScript, Images)
