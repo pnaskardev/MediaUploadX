@@ -67,13 +67,15 @@ def add_subtitle(request):
             return HttpResponseRedirect(subtitle.media.get_absolute_url())
     else:
         form = SubtitleForm(media_item=media)
-    return render(request, "cms/add_subtitle.html", {"form": form})
+    return render(request, "core/add_subtitle.html", {"form": form})
+
 
 def categories(request):
     """List categories view"""
 
     context = {}
-    return render(request, "cms/categories.html", context)
+    return render(request, "core/categories.html", context)
+
 
 def contact(request):
     """Contact view"""
@@ -94,7 +96,8 @@ def contact(request):
                 name = request.POST.get("name")
             message = request.POST.get("message")
 
-            title = "[{}] - Contact form message received".format(settings.PORTAL_NAME)
+            title = "[{}] - Contact form message received".format(
+                settings.PORTAL_NAME)
 
             msg = """
 You have received a message through the contact form\n
@@ -117,13 +120,14 @@ Sender email: %s\n
             success_msg = "Message was sent! Thanks for contacting"
             context["success_msg"] = success_msg
 
-    return render(request, "cms/contact.html", context)
+    return render(request, "core/contact.html", context)
+
 
 def history(request):
     """Show personal history view"""
 
     context = {}
-    return render(request, "cms/history.html", context)
+    return render(request, "core/history.html", context)
 
 
 @login_required
@@ -141,7 +145,8 @@ def edit_media(request):
     if not (request.user == media.user or is_mediauploadx_editor(request.user) or is_mediauploadx_manager(request.user)):
         return HttpResponseRedirect("/")
     if request.method == "POST":
-        form = MediaForm(request.user, request.POST, request.FILES, instance=media)
+        form = MediaForm(request.user, request.POST,
+                         request.FILES, instance=media)
         if form.is_valid():
             media = form.save()
             for tag in media.tags.all():
@@ -154,7 +159,8 @@ def edit_media(request):
                         try:
                             tag = Tag.objects.get(title=tag)
                         except Tag.DoesNotExist:
-                            tag = Tag.objects.create(title=tag, user=request.user)
+                            tag = Tag.objects.create(
+                                title=tag, user=request.user)
                         if tag not in media.tags.all():
                             media.tags.add(tag)
             messages.add_message(request, messages.INFO, "Media was edited!")
@@ -163,7 +169,7 @@ def edit_media(request):
         form = MediaForm(request.user, instance=media)
     return render(
         request,
-        "cms/edit_media.html",
+        "core/edit_media.html",
         {"form": form, "add_subtitle_url": media.add_subtitle_url},
     )
 
@@ -175,42 +181,43 @@ def embed_media(request):
     if not friendly_token:
         return HttpResponseRedirect("/")
 
-    media = Media.objects.values("title").filter(friendly_token=friendly_token).first()
+    media = Media.objects.values("title").filter(
+        friendly_token=friendly_token).first()
 
     if not media:
         return HttpResponseRedirect("/")
 
     context = {}
     context["media"] = friendly_token
-    return render(request, "cms/embed.html", context)
+    return render(request, "core/embed.html", context)
 
 
 def featured_media(request):
     """List featured media view"""
 
     context = {}
-    return render(request, "cms/featured-media.html", context)
+    return render(request, "core/featured-media.html", context)
 
 
 def index(request):
     """Index view"""
 
     context = {}
-    return render(request, "cms/index.html", context)
+    return render(request, "core/index.html", context)
 
 
 def latest_media(request):
     """List latest media view"""
 
     context = {}
-    return render(request, "cms/latest-media.html", context)
+    return render(request, "core/latest-media.html", context)
 
 
 def liked_media(request):
     """List user's liked media view"""
 
     context = {}
-    return render(request, "cms/liked_media.html", context)
+    return render(request, "core/liked_media.html", context)
 
 
 @login_required
@@ -218,7 +225,7 @@ def manage_users(request):
     """List users management view"""
 
     context = {}
-    return render(request, "cms/manage_users.html", context)
+    return render(request, "core/manage_users.html", context)
 
 
 @login_required
@@ -226,7 +233,7 @@ def manage_media(request):
     """List media management view"""
 
     context = {}
-    return render(request, "cms/manage_media.html", context)
+    return render(request, "core/manage_media.html", context)
 
 
 @login_required
@@ -234,21 +241,21 @@ def manage_comments(request):
     """List comments management view"""
 
     context = {}
-    return render(request, "cms/manage_comments.html", context)
+    return render(request, "core/manage_comments.html", context)
 
 
 def members(request):
     """List members view"""
 
     context = {}
-    return render(request, "cms/members.html", context)
+    return render(request, "core/members.html", context)
 
 
 def recommended_media(request):
     """List recommended media view"""
 
     context = {}
-    return render(request, "cms/recommended-media.html", context)
+    return render(request, "core/recommended-media.html", context)
 
 
 def search(request):
@@ -257,21 +264,21 @@ def search(request):
     context = {}
     RSS_URL = f"/rss{request.environ['REQUEST_URI']}"
     context["RSS_URL"] = RSS_URL
-    return render(request, "cms/search.html", context)
+    return render(request, "core/search.html", context)
 
 
 def tags(request):
     """List tags view"""
 
     context = {}
-    return render(request, "cms/tags.html", context)
+    return render(request, "core/tags.html", context)
 
 
 def tos(request):
     """Terms of service view"""
 
     context = {}
-    return render(request, "cms/tos.html", context)
+    return render(request, "core/tos.html", context)
 
 
 def upload_media(request):
@@ -286,7 +293,7 @@ def upload_media(request):
     can_upload_exp = settings.CANNOT_ADD_MEDIA_MESSAGE
     context["can_upload_exp"] = can_upload_exp
 
-    return render(request, "cms/add-media.html", context)
+    return render(request, "core/add-media.html", context)
 
 
 def view_media(request):
@@ -297,10 +304,11 @@ def view_media(request):
     media = Media.objects.filter(friendly_token=friendly_token).first()
     if not media:
         context["media"] = None
-        return render(request, "cms/media.html", context)
+        return render(request, "core/media.html", context)
 
     user_or_session = get_user_or_session(request)
-    save_user_action.delay(user_or_session, friendly_token=friendly_token, action="watch")
+    save_user_action.delay(
+        user_or_session, friendly_token=friendly_token, action="watch")
     context = {}
     context["media"] = friendly_token
     context["media_object"] = media
@@ -314,7 +322,7 @@ def view_media(request):
             context["CAN_DELETE_MEDIA"] = True
             context["CAN_EDIT_MEDIA"] = True
             context["CAN_DELETE_COMMENTS"] = True
-    return render(request, "cms/media.html", context)
+    return render(request, "core/media.html", context)
 
 
 def view_playlist(request, friendly_token):
@@ -327,4 +335,4 @@ def view_playlist(request, friendly_token):
 
     context = {}
     context["playlist"] = playlist
-    return render(request, "cms/playlist.html", context)
+    return render(request, "core/playlist.html", context)
