@@ -1,6 +1,8 @@
 from django.urls import path, re_path, include
 
+from . import api
 from . import views
+
 
 urlpatterns = [
     re_path(r"^user/(?P<username>[\w@._-]*)$",
@@ -31,4 +33,23 @@ urlpatterns = [
         views.edit_channel,
         name="edit_channel",
     ),
+
+
+    # API VIEWS
+    path('api/v1/whoami', api.UserWhoami.as_view(), name='user-whoami'),
+    path('api/v1/user/token', api.UserToken.as_view(), name='user-token'),
+    path('api/v1/login', api.LoginView.as_view(), name='user-login'),
+    re_path(r"^api/v1/users$", api.UserList.as_view(), name="api_users"),
+    re_path(r"^api/v1/users/$", api.UserList.as_view()),
+    re_path(
+        r"^api/v1/users/(?P<username>[\w@._-]*)$",
+        api.UserDetail.as_view(),
+        name="api_get_user",
+    ),
+    re_path(
+        r"^api/v1/users/(?P<username>[\w@._-]*)/contact",
+        api.contact_user,
+        name="api_contact_user",
+    ),
+
 ]
